@@ -28,9 +28,8 @@ const authors = JSON.parse(fs.readFileSync(authorsJSONFilePath));
 authorsRouter.post("/", (req, res) => {
   // create new object
   //   keys that are created in the server
-  const newAuthor = { ...req.body, id: uniqid(), createdAt: new Date() };
-  //   read authors.json to get back the array
-  const authors = JSON.parse(fs.readFileSync(authorsJSONFilePath));
+  const newAuthor = { id: uniqid(), ...req.body, createdAt: new Date() };
+  //   read authors.json to get back the array and
   // add new author to the list
   authors.push(newAuthor);
   // write the array back to the file
@@ -78,11 +77,33 @@ authorsRouter.delete("/:id", (req, res) => {
   fs.writeFileSync(authorsJSONFilePath, JSON.stringify(authors));
   //   send back the response
 
-  res.statu(204).send("deleted");
+  res.status(204).send("deleted");
 });
 // 6.POST authors/checkEmail
 authorsRouter.post("/checkEmail", (req, res) => {
-  // get array of the the authors
+  // create new object
+  //   keys that are created in the server
+  const newAuthor = { ...req.body, id: uniqid(), createdAt: new Date() };
+  //   read authors.json to get back the array and
+  // add new author to the list if email is not the same
+  const emailAlreadeyInUse = authors.some(
+    (author) => author.email === newAuthor.email
+  );
+  if (!emailAlreadeyInUse) {
+    //   read authors.json to get back the array and
+    // add new author to the list
+    authors.push(newAuthor);
+    // write the array back to the file
+    fs.writeFileSync(authorsJSONFilePath, JSON.stringify(authors));
+    // send a response
+  }
+  res
+    .status(201)
+    .send(
+      emailAlreadeyInUse
+        ? "it already exists"
+        : "you are good to go" + JSON.stringify(newAuthor)
+    );
 });
 
 export default authorsRouter;
