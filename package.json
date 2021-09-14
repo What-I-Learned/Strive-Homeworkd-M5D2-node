@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon ./src/server.js"
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,11 @@
   "homepage": "https://github.com/justaspetrauskas/Strive-Homeworkd-M5D2-node#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-list-endpoints": "^6.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
   }
 }

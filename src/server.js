@@ -3,7 +3,7 @@ import bodyParser from "body-parser";
 import listEndpoints from "express-list-endpoints";
 import cors from "cors";
 
-import blogRouter from "./blog/index.js"; // remeber to use extension
+// import blogRouter from "./blog/index.js"; // remeber to use extension
 
 const app = express(); // server
 const PORT = 3001; // port number
