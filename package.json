@@ -1,0 +1,26 @@
+{
+  "name": "Strive-Homeworkd-M5D2-node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justaspetrauskas/Strive-Homeworkd-M5D2-node.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/justaspetrauskas/Strive-Homeworkd-M5D2-node/issues"
+  },
+  "homepage": "https://github.com/justaspetrauskas/Strive-Homeworkd-M5D2-node#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "express-list-endpoints": "^6.0.0"
+  }
+}
