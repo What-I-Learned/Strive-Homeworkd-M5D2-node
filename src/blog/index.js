@@ -13,18 +13,22 @@ import { request } from "http";
 
 const authorsRouter = express.Router();
 // To obtain the studentsJSONFilePath I need to do the following:
-// 1. I'll start from the current file path I'm in right now (c:/..../src/services/students/index.js)
+// 1. I'll start from the current file path I'm in right now (c:/..../src/blog/index.js)
 const currentFilePath = fileURLToPath(import.meta.url);
-// 2. I'll obtain the current folder index.js file is in (c:/..../src/services/students)
+// 2. I'll obtain the current folder index.js file is in (c:/..../src/blog)
 const currentDirPath = dirname(currentFilePath);
-// 3. I'll concatenate folder path with students.json (c:/..../src/services/students/students.json) DO NOT USE "+" SYMBOL TO CONCATENATE TWO PATHS TOGETHER
+// 3. I'll concatenate folder path with authors.json (c:/..../src/blog/students.json) DO NOT USE "+" SYMBOL TO CONCATENATE TWO PATHS TOGETHER
 const authorsJSONFilePath = join(currentDirPath, "authors.json");
 console.log(authorsJSONFilePath);
+
+// array of authors
+const authors = JSON.parse(fs.readFileSync(authorsJSONFilePath));
 
 // 1. CREATE
 authorsRouter.post("/", (req, res) => {
   // create new object
-  const newAuthor = { ...request.body, id: uniqid(), createdAt: newDate() };
+  //   keys that are created in the server
+  const newAuthor = { ...req.body, id: uniqid(), createdAt: new Date() };
   //   read authors.json to get back the array
   const authors = JSON.parse(fs.readFileSync(authorsJSONFilePath));
   // add new author to the list
@@ -34,26 +38,51 @@ authorsRouter.post("/", (req, res) => {
   // send a response
   res.status(201).send({ id: newAuthor.id });
 });
-// 2. READ --> GET
+// 2. READ --> GET all
 authorsRouter.get("/", (req, res) => {
   // read authors.json file parse it
-  const authors = JSON.parse(
-    fs.writeFileSync(authorsJSONFilePath, JSON.stringify(authors))
-  );
+  //   const authors = JSON.parse(fs.readFileSync(authorsJSONFilePath)); // we get buffer which is the content of the file and parse it
   // send back the response
   res.send(authors);
 });
-// 3. READ --> GET BY id
+// 3. READ --> GET BY id one
 authorsRouter.get("/:id", (req, res) => {
-  res.send("hello world");
+  // get a list
+
+  // find an author based on id
+  const author = authors.find((author) => author.id === req.params.id);
+  //   send back the response
+  if (author) {
+    res.status(200).send(author);
+  } else {
+    res.status(404).send("not found");
+  }
 });
 // 4. UPDATE --> PUT
 authorsRouter.put("/:id", (req, res) => {
-  res.send("hello world");
+  // get array of authors and modify specific author
+  const index = authors.findIndex((author) => author.id === req.params.id);
+  // update author
+  const updatedAuthor = { ...authors[index], ...req.body };
+  authors[index] = updatedAuthor;
+  //   save the file with update list of authors
+  fs.writeFileSync(authorsJSONFilePath, JSON.stringify(authors));
+  // send response
+  res.send("updated");
 });
 // 5. DELETE --> DELETE
 authorsRouter.delete("/:id", (req, res) => {
-  res.send("hello world");
+  // array of authors and filter out by id
+  const index = authors.filter((author) => author.id !== req.params.id); // possible to do with slice but
+  //write remaining authors into the file
+  fs.writeFileSync(authorsJSONFilePath, JSON.stringify(authors));
+  //   send back the response
+
+  res.statu(204).send("deleted");
+});
+// 6.POST authors/checkEmail
+authorsRouter.post("/checkEmail", (req, res) => {
+  // get array of the the authors
 });
 
 export default authorsRouter;
