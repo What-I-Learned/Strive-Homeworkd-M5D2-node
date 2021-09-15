@@ -4,14 +4,11 @@ const mandatoryFields = [
   "name",
   "surname",
   "email",
-  "birthdate",
+  "birthDate",
   "avatar",
   "age",
 ];
-// export const authortValidationMiddleware = [
-//   body("age").exists().withMessage(`Age is a mandatory field!`),
-// ];
-export const authortValidationMiddleware = () =>
-  mandatoryFields.forEach((field) => {
-    body(field).exists().withMessage(`${field} is a mandatory field!`);
-  });
+
+export const authortValidationMiddleware = mandatoryFields.map((field) => {
+  return body(field).exists().withMessage(`${field} is a mandatory field!`);
+});
