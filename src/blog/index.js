@@ -72,9 +72,9 @@ authorsRouter.put("/:id", (req, res) => {
 // 5. DELETE --> DELETE
 authorsRouter.delete("/:id", (req, res) => {
   // array of authors and filter out by id
-  const index = authors.filter((author) => author.id !== req.params.id); // possible to do with slice but
+  const filtered = authors.filter((author) => author.id !== req.params.id); // possible to do with slice but
   //write remaining authors into the file
-  fs.writeFileSync(authorsJSONFilePath, JSON.stringify(authors));
+  fs.writeFileSync(authorsJSONFilePath, JSON.stringify(filtered));
   //   send back the response
 
   res.status(204).send("deleted");
