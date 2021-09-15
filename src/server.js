@@ -3,7 +3,14 @@ import bodyParser from "body-parser";
 import listEndpoints from "express-list-endpoints";
 import cors from "cors";
 
-import authorsRouter from "./blog/index.js"; // remeber to use extension
+import authorsRouter from "./authors/index.js"; // remeber to use extension
+import blogPostsRouter from "./blogPost/index.js";
+import {
+  badRequestErrorHandler,
+  notFoundErrorHandler,
+  forbiddenErrorHandler,
+  genericServerErrorHandler,
+} from "./errorHandlers.js";
 
 const app = express(); // server
 const PORT = 3001; // port number
@@ -13,6 +20,13 @@ app.use(bodyParser.json()); // to parse the request body else it would be undefi
 
 // endpoints
 app.use("/authors", authorsRouter);
+app.use("/blogPosts", blogPostsRouter);
+
+// error middlewares
+app.use(badRequestErrorHandler);
+app.use(notFoundErrorHandler);
+app.use(forbiddenErrorHandler);
+app.use(genericServerErrorHandler);
 
 // listen to requests
 app.listen(PORT, () => {
