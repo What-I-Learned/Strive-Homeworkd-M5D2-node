@@ -10,6 +10,7 @@ import { fileURLToPath } from "url"; // CORE MODULE
 import { dirname, join } from "path"; // CORE MODULE
 import uniqid from "uniqid"; // 3RD PARTY MODULE
 import { validationResult } from "express-validator";
+import createHttpError from "http-errors";
 import { authortValidationMiddleware } from "./authorValidation.js";
 
 const authorsRouter = express.Router();
@@ -27,9 +28,9 @@ const authors = JSON.parse(fs.readFileSync(authorsJSONFilePath));
 
 // 1. CREATE
 authorsRouter.post("/", authortValidationMiddleware, (req, res, next) => {
-  const errorList = validationResult(req);
-  if (!errorList.isEmpty()) {
-    next(errorList);
+  const errorsList = validationResult(req);
+  if (!errorsList.isEmpty()) {
+    next(createHttpError(400, { errorsList }));
   } else {
     try {
       // create new object
@@ -41,7 +42,7 @@ authorsRouter.post("/", authortValidationMiddleware, (req, res, next) => {
       // write the array back to the file
       fs.writeFileSync(authorsJSONFilePath, JSON.stringify(authors));
       // send a response
-      res.status(201).send({ id: newAuthor.id });
+      res.status(200).send({ id: newAuthor.id });
     } catch (err) {
       next(err);
     }
@@ -69,7 +70,9 @@ authorsRouter.get("/:id", (req, res, next) => {
     if (author) {
       res.status(200).send(author);
     } else {
-      res.status(404).send("not found");
+      next(
+        createHttpError(404, `Post with ID ${req.params.postId} not found!`)
+      );
     }
   } catch (err) {
     next(err);

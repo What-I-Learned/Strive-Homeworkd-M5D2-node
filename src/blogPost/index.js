@@ -5,6 +5,7 @@ import { dirname, join } from "path";
 import uniqid from "uniqid";
 import { validationResult } from "express-validator";
 import { postValidationMiddleware } from "./postValidation.js";
+import createHttpError from "http-errors";
 
 const blogPostsRouter = express.Router();
 
@@ -17,17 +18,17 @@ const blogPostJsonFilePath = join(
 // global const
 const getPosts = () => JSON.parse(fs.readFileSync(blogPostJsonFilePath));
 const writePostFile = (content) =>
-  fs.writeFileSync(authorsJSONFilePath, JSON.stringify(content));
+  fs.writeFileSync(blogPostJsonFilePath, JSON.stringify(content));
 //create
 blogPostsRouter.post("/", postValidationMiddleware, (req, res, next) => {
   const errorsList = validationResult(req);
 
   if (!errorsList.isEmpty()) {
-    next({ errorsList });
+    next(createHttpError(400, { errorsList }));
   } else {
     try {
       const newPost = {
-        id: uniqid(),
+        _id: uniqid(),
         ...req.body,
         createdAt: new Date(),
       };
@@ -35,7 +36,7 @@ blogPostsRouter.post("/", postValidationMiddleware, (req, res, next) => {
       blogPosts.push(newPost);
       writePostFile(blogPosts);
 
-      res.status(201).send({ id: newPost.id });
+      res.status(200).send({ id: newPost._id });
     } catch (err) {
       next(err);
     }
@@ -54,11 +55,16 @@ blogPostsRouter.get("/", (req, res, next) => {
 blogPostsRouter.get("/:postId", (req, res, next) => {
   try {
     const blogPosts = getPosts();
-    const post = blogPosts.find((post) => post.id === req.params.postId);
+    const post = blogPosts.find(
+      (post) => post._id.toString() === req.params.postId
+    );
     if (post) {
       res.status(200).send(post);
     } else {
-      res.status(404).send("not found");
+      //   res.status(404).send("not found");
+      next(
+        createHttpError(404, `Post with ID ${req.params.postId} not found!`)
+      );
     }
   } catch (err) {
     next(err);
@@ -73,7 +79,7 @@ blogPostsRouter.put("/:postId", postValidationMiddleware, (req, res, next) => {
     try {
       const blogPosts = getPosts();
       const postIndex = blogPosts.findIndex(
-        (post) => post.id === req.params.postId
+        (post) => post._id === req.params.postId
       );
       const updatedPost = { ...blogPosts[postIndex], ...req.body };
       blogPosts[postIndex] = updatedPost;
@@ -84,13 +90,14 @@ blogPostsRouter.put("/:postId", postValidationMiddleware, (req, res, next) => {
     }
   }
 });
+
 //DeleteOne
 blogPostsRouter.delete("/:postId", (req, res, next) => {
   try {
     const blogPosts = getPosts();
-    const filtered = blogPosts.filter((post) => post.id !== req.params.postId);
+    const filtered = blogPosts.filter((post) => post._id !== req.params.postId);
     writePostFile(filtered);
-    res.status(200).send("deleted");
+    res.status(204).send("deleted");
   } catch (err) {
     next(err);
   }
