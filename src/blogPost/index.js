@@ -6,6 +6,7 @@ import uniqid from "uniqid";
 import { validationResult } from "express-validator";
 import { postValidationMiddleware } from "./postValidation.js";
 import createHttpError from "http-errors";
+import "../../utils/fs-utils.js";
 
 const blogPostsRouter = express.Router();
 
