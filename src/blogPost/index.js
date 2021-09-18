@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -6,7 +7,7 @@ import uniqid from "uniqid";
 import { validationResult } from "express-validator";
 import { postValidationMiddleware } from "./postValidation.js";
 import createHttpError from "http-errors";
-import "../../utils/fs-utils.js";
+import { writeFileToPublic } from "../../utils/fs-utils.js";
 
 const blogPostsRouter = express.Router();
 
@@ -18,33 +19,45 @@ const blogPostJsonFilePath = join(
 
 // global const
 const getPosts = () => JSON.parse(fs.readFileSync(blogPostJsonFilePath));
-const writePostFile = (content) =>
+const writePostFile = async (content) =>
   fs.writeFileSync(blogPostJsonFilePath, JSON.stringify(content));
+
 //create
-blogPostsRouter.post("/", postValidationMiddleware, (req, res, next) => {
-  const errorsList = validationResult(req);
+blogPostsRouter.post(
+  "/",
+  // postValidationMiddleware,
+  multer().single("image"),
+  async (req, res, next) => {
+    const errorsList = validationResult(req);
 
-  if (!errorsList.isEmpty()) {
-    next(createHttpError(400, { errorsList }));
-  } else {
-    try {
-      const newPost = {
-        _id: uniqid(),
-        ...req.body,
-        createdAt: new Date(),
-      };
-      const blogPosts = getPosts();
-      blogPosts.push(newPost);
-      writePostFile(blogPosts);
+    if (!errorsList.isEmpty()) {
+      next(createHttpError(400, { errorsList }));
+    } else {
+      try {
+        const { url, id } = await writeFileToPublic(req.file);
 
-      res.status(200).send({ id: newPost._id });
-    } catch (err) {
-      next(err);
+        const newPost = {
+          _id: uniqid(),
+          image: {
+            path: url,
+            id: id,
+          },
+          ...req.body,
+          createdAt: new Date(),
+        };
+        const blogPosts = await getPosts();
+        blogPosts.push(newPost);
+        await writePostFile(blogPosts);
+
+        res.send({ newPost });
+      } catch (err) {
+        next(err);
+      }
     }
   }
-});
+);
 //Get all
-blogPostsRouter.get("/", (req, res, next) => {
+blogPostsRouter.get("/", async (req, res, next) => {
   try {
     const blogPosts = getPosts();
     res.status(200).send(blogPosts);

@@ -11,11 +11,13 @@ import {
   forbiddenErrorHandler,
   genericServerErrorHandler,
 } from "./errorHandlers.js";
+import { publicFolderPath } from "../utils/fs-utils.js";
 
 const app = express(); // server
-const PORT = 3001; // port number
+const PORT = 3002; // port number
 
 app.use(cors()); // enable FE to communicate with BE
+app.use(express.static(publicFolderPath));
 app.use(bodyParser.json()); // to parse the request body else it would be undefined
 
 // endpoints
