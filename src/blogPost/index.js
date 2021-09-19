@@ -1,120 +1,164 @@
 import express from "express";
-import multer from "multer";
-import fs from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import uniqid from "uniqid";
 import { validationResult } from "express-validator";
-import { postValidationMiddleware } from "./postValidation.js";
 import createHttpError from "http-errors";
-import { writeFileToPublic } from "../../utils/fs-utils.js";
+import { imageUpload, getPosts, writePosts } from "../../utils/postUtils.js";
+import { commentValidatioin } from "./postVAlidation.js";
 
 const blogPostsRouter = express.Router();
-
-// path to file
-const blogPostJsonFilePath = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "posts.json"
-);
-
-// global const
-const getPosts = () => JSON.parse(fs.readFileSync(blogPostJsonFilePath));
-const writePostFile = async (content) =>
-  fs.writeFileSync(blogPostJsonFilePath, JSON.stringify(content));
 
 //create
 blogPostsRouter.post(
   "/",
-  // postValidationMiddleware,
-  multer().single("image"),
+  imageUpload.single("blog-image"),
   async (req, res, next) => {
-    const errorsList = validationResult(req);
+    try {
+      const newPost = {
+        _id: uniqid(),
 
-    if (!errorsList.isEmpty()) {
-      next(createHttpError(400, { errorsList }));
-    } else {
-      try {
-        const { url, id } = await writeFileToPublic(req.file);
+        ...req.body,
+        image: {
+          path: req.file.path,
+          id: uniqid(),
+        },
+        comments: [],
+        createdAt: new Date(),
+      };
 
-        const newPost = {
-          _id: uniqid(),
-          image: {
-            path: url,
-            id: id,
-          },
-          ...req.body,
-          createdAt: new Date(),
-        };
-        const blogPosts = await getPosts();
-        blogPosts.push(newPost);
-        await writePostFile(blogPosts);
+      const blogPosts = await getPosts();
+      blogPosts.push(newPost);
+      await writePosts(blogPosts);
 
-        res.send({ newPost });
-      } catch (err) {
-        next(err);
-      }
+      // let data = JSON.stringify(newPost);
+      // fs.writeFileSync(postJsonFile, data);
+      // console.log(req.file.path);
+      res.status(200).send({ newPost });
+    } catch (err) {
+      next(err);
     }
   }
 );
 //Get all
 blogPostsRouter.get("/", async (req, res, next) => {
   try {
-    const blogPosts = getPosts();
-    res.status(200).send(blogPosts);
+    const blogPosts = await getPosts();
+    if (req.query && req.query.title) {
+      const filteredPosts = blogPosts.filter(
+        (post) => post.title === req.query.title
+      );
+      res.send(filteredPosts);
+    } else {
+      res.status(201).send(blogPosts);
+    }
   } catch (err) {
     next(err);
   }
 });
 //Get one
-blogPostsRouter.get("/:postId", (req, res, next) => {
+blogPostsRouter.get("/:postId", async (req, res, next) => {
   try {
-    const blogPosts = getPosts();
-    const post = blogPosts.find(
-      (post) => post._id.toString() === req.params.postId
-    );
+    const blogPosts = await getPosts();
+    const post = blogPosts.find((post) => post._id === req.params.postId);
     if (post) {
-      res.status(200).send(post);
+      res.send(post);
     } else {
-      //   res.status(404).send("not found");
-      next(
-        createHttpError(404, `Post with ID ${req.params.postId} not found!`)
-      );
+      next(createHttpError(404, "Post with this id was not found"));
     }
   } catch (err) {
     next(err);
   }
 });
 //Edit one
-blogPostsRouter.put("/:postId", postValidationMiddleware, (req, res, next) => {
-  const errorsList = validationResult(req);
-  if (!errorsList.isEmpty()) {
-    next({ errorsList });
-  } else {
-    try {
-      const blogPosts = getPosts();
-      const postIndex = blogPosts.findIndex(
-        (post) => post._id === req.params.postId
-      );
-      const updatedPost = { ...blogPosts[postIndex], ...req.body };
-      blogPosts[postIndex] = updatedPost;
-      writePostFile(blogPosts);
-      res.status(200).send("updated");
-    } catch (err) {
-      next(err);
-    }
-  }
-});
-
-//DeleteOne
-blogPostsRouter.delete("/:postId", (req, res, next) => {
+blogPostsRouter.put("/:postId", async (req, res, next) => {
   try {
-    const blogPosts = getPosts();
-    const filtered = blogPosts.filter((post) => post._id !== req.params.postId);
-    writePostFile(filtered);
-    res.status(204).send("deleted");
+    const blogPosts = await getPosts();
+    const postIndex = blogPosts.findIndex(
+      (post) => post._id === req.params.postId
+    );
+    const postToEdit = blogPosts[postIndex];
+    const updatedPost = { ...postToEdit, ...req.body };
+
+    blogPosts[postToEdit] = updatedPost;
+    await writePosts(blogPosts);
+    res.send(updatedPost);
   } catch (err) {
     next(err);
   }
 });
 
+// add comment
+blogPostsRouter.put(
+  "/:postId/comments",
+  commentValidatioin,
+  async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        next(
+          createHttpError(400, {
+            message: "comment validation failed",
+            errors: errors.array(),
+          })
+        );
+      }
+      const blogPosts = await getPosts();
+      const postIndex = blogPosts.findIndex(
+        (post) => post._id === req.params.postId
+      );
+      if (postIndex == -1) {
+        next(createHttpError(404, "Post not found"));
+      } else {
+        const newComment = {
+          id: uniqid(),
+          ...req.body,
+          createdAt: new Date(),
+        };
+        blogPosts[postIndex].comments.push(newComment);
+        await writePosts(blogPosts);
+        res.send(newComment);
+      }
+    } catch (err) {
+      next(createHttpError(400, err.message));
+    }
+  }
+);
+
+//DeleteOne
+blogPostsRouter.delete("/:postId", async (req, res, next) => {
+  try {
+    const blogPosts = getPosts();
+    const filteredPosts = blogPosts.filter(
+      (post) => post._id !== req.params.postId
+    );
+    await writePosts(filteredPosts);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+//DeleteOne a comment
+blogPostsRouter.delete(
+  "/:postId/comments/:commentId",
+  async (req, res, next) => {
+    try {
+      const blogPosts = await getPosts();
+      const postIndex = blogPosts.findIndex(
+        (post) => post._id === req.params.postId
+      );
+
+      if (postIndex == -1) {
+        next(createHttpError(404, "Post not found"));
+      } else {
+        const filteredComments = blogPosts[postIndex].comments.filter(
+          (comment) => comment.id !== req.params.commentId
+        );
+        blogPosts[postIndex].comments = filteredComments;
+        await writePosts(blogPosts);
+        res.send("deleted");
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 export default blogPostsRouter;

@@ -11,7 +11,7 @@ import {
   forbiddenErrorHandler,
   genericServerErrorHandler,
 } from "./errorHandlers.js";
-import { publicFolderPath } from "../utils/fs-utils.js";
+import { publicFolderPath } from "../utils/postUtils.js";
 
 const app = express(); // server
 const PORT = 3002; // port number
