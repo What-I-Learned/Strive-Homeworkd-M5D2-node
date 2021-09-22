@@ -1,6 +1,5 @@
 import express from "express";
 import bodyParser from "body-parser";
-import listEndpoints from "express-list-endpoints";
 import cors from "cors";
 
 import authorsRouter from "./authors/index.js"; // remeber to use extension
@@ -12,11 +11,24 @@ import {
   genericServerErrorHandler,
 } from "./errorHandlers.js";
 import { publicFolderPath } from "../utils/postUtils.js";
+import listEndpoints from "express-list-endpoints";
 
 const app = express(); // server
-const PORT = 3002; // port number
+const PORT = process.env.PORT || 3005; // port number
 
-app.use(cors()); // enable FE to communicate with BE
+const whitelist = [process.env.FE_DEV_URL, "https://anotherwebsite.com"];
+
+const corsOpts = {
+  origin: function (origin, next) {
+    if (whitelist.indexOf(origin) !== -1) {
+      next(null, true);
+    } else {
+      next(new Error("Origins is not allowed"));
+    }
+  },
+};
+
+app.use(cors(corsOpts)); // enable FE to communicate with BE
 app.use(express.static(publicFolderPath));
 app.use(bodyParser.json()); // to parse the request body else it would be undefined
 
@@ -29,6 +41,8 @@ app.use(badRequestErrorHandler);
 app.use(notFoundErrorHandler);
 app.use(forbiddenErrorHandler);
 app.use(genericServerErrorHandler);
+
+console.table(listEndpoints(app));
 
 // listen to requests
 app.listen(PORT, () => {

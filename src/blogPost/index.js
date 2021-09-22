@@ -8,33 +8,46 @@ import { commentValidatioin } from "./postVAlidation.js";
 const blogPostsRouter = express.Router();
 
 //create
+blogPostsRouter.post("/", async (req, res, next) => {
+  try {
+    const newPost = {
+      _id: uniqid(),
+
+      ...req.body,
+      comments: [],
+      createdAt: new Date(),
+    };
+
+    const blogPosts = await getPosts();
+    blogPosts.push(newPost);
+    await writePosts(blogPosts);
+
+    // let data = JSON.stringify(newPost);
+    // fs.writeFileSync(postJsonFile, data);
+    // console.log(req.file.path);
+    res.status(200).send({ newPost });
+  } catch (err) {
+    next(err);
+  }
+});
+//add image
 blogPostsRouter.post(
-  "/",
-  imageUpload.single("blog-image"),
+  "/:id/coverImage",
+  imageUpload.single("cover"),
   async (req, res, next) => {
     try {
-      const newPost = {
-        _id: uniqid(),
+      const posts = await getPosts();
+      const post = posts.find((post) => post._id === req.params.id);
+      if (!post) {
+        next(createHttpError(400, { message: error.message }));
+      } else {
+        post["coverURL"] = req.file.path;
+        await writePosts(posts);
 
-        ...req.body,
-        image: {
-          path: req.file.path,
-          id: uniqid(),
-        },
-        comments: [],
-        createdAt: new Date(),
-      };
-
-      const blogPosts = await getPosts();
-      blogPosts.push(newPost);
-      await writePosts(blogPosts);
-
-      // let data = JSON.stringify(newPost);
-      // fs.writeFileSync(postJsonFile, data);
-      // console.log(req.file.path);
-      res.status(200).send({ newPost });
+        res.status(200).send({ post });
+      }
     } catch (err) {
-      next(err);
+      next(createHttpError(400, { message: error.message }));
     }
   }
 );
@@ -46,7 +59,7 @@ blogPostsRouter.get("/", async (req, res, next) => {
       const filteredPosts = blogPosts.filter(
         (post) => post.title === req.query.title
       );
-      res.send(filteredPosts);
+      res.status(201).send(filteredPosts);
     } else {
       res.status(201).send(blogPosts);
     }
@@ -76,7 +89,7 @@ blogPostsRouter.put("/:postId", async (req, res, next) => {
       (post) => post._id === req.params.postId
     );
     const postToEdit = blogPosts[postIndex];
-    const updatedPost = { ...postToEdit, ...req.body };
+    const updatedPost = { ...postToEdit, ...req.body, updatedAt: new Date() };
 
     blogPosts[postToEdit] = updatedPost;
     await writePosts(blogPosts);
@@ -126,12 +139,12 @@ blogPostsRouter.put(
 //DeleteOne
 blogPostsRouter.delete("/:postId", async (req, res, next) => {
   try {
-    const blogPosts = getPosts();
+    const blogPosts = await getPosts();
     const filteredPosts = blogPosts.filter(
       (post) => post._id !== req.params.postId
     );
     await writePosts(filteredPosts);
-    res.status(204).send();
+    res.status(204).send("deleted");
   } catch (err) {
     next(err);
   }

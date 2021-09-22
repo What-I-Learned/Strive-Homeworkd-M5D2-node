@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon ./src/server.js"
+    "start": "nodemon ./src/server.js",
+    "dev": "nodemon -e js -r dotenv/config ./src/server.js ",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -20,6 +22,7 @@
   "homepage": "https://github.com/justaspetrauskas/Strive-Homeworkd-M5D2-node#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "cloudinary": "^1.27.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-list-endpoints": "^6.0.0",
@@ -28,9 +31,11 @@
     "fs-extra": "^10.0.0",
     "http-errors": "^1.8.0",
     "multer": "^1.4.3",
+    "multer-storage-cloudinary": "^4.0.0",
     "uniqid": "^5.4.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.12",
+    "dotenv": "^10.0.0"
   }
 }
