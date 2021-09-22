@@ -4,6 +4,7 @@ import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { imageUpload, getPosts, writePosts } from "../../utils/postUtils.js";
 import { commentValidatioin } from "./postVAlidation.js";
+import { getPDFReadableStream } from "../../utils/pdf.js";
 
 const blogPostsRouter = express.Router();
 
@@ -44,7 +45,7 @@ blogPostsRouter.post(
         post["coverURL"] = req.file.path;
         await writePosts(posts);
 
-        res.status(200).send({ post });
+        res.status(200).send("image uploaded");
       }
     } catch (err) {
       next(createHttpError(400, { message: error.message }));
@@ -81,6 +82,28 @@ blogPostsRouter.get("/:postId", async (req, res, next) => {
     next(err);
   }
 });
+// get pdf
+blogPostsRouter.get("/:id/pdf", async (req, res, next) => {
+  try {
+    const blogPosts = await getPosts();
+    const post = blogPosts.find((post) => post._id === req.params.postId);
+    if (post) {
+      res.setHeader("Content-Disposition", "attachment;filename=example.pdf");
+      const source = getPDFReadableStream(post);
+      const destination = res;
+
+      pipeline(source, destination, (err) => {
+        if (err) next(err);
+      });
+      res.send(post);
+    } else {
+      next(createHttpError(404, "Post with this id was not found"));
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
 //Edit one
 blogPostsRouter.put("/:postId", async (req, res, next) => {
   try {

@@ -17,13 +17,13 @@ const app = express(); // server
 const PORT = process.env.PORT || 3005; // port number
 
 const whitelist = [process.env.FE_DEV_URL, "https://anotherwebsite.com"];
-
 const corsOpts = {
   origin: function (origin, next) {
-    if (whitelist.indexOf(origin) !== -1) {
+    console.log("CURRENT ORIGIN: ", origin);
+    if (!origin || whitelist.indexOf(origin) !== -1) {
       next(null, true);
     } else {
-      next(new Error("Origins is not allowed"));
+      next(new Error("Origin is not allowed"));
     }
   },
 };
