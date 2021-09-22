@@ -3,7 +3,7 @@ import uniqid from "uniqid";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
 import { imageUpload, getPosts, writePosts } from "../../utils/postUtils.js";
-import { commentValidatioin } from "./postVAlidation.js";
+import { commentValidatioin } from "./postValidation.js";
 import { getPDFReadableStream } from "../../utils/pdf.js";
 
 const blogPostsRouter = express.Router();
