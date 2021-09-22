@@ -16,7 +16,7 @@ import listEndpoints from "express-list-endpoints";
 const app = express(); // server
 const PORT = process.env.PORT || 3005; // port number
 
-const whitelist = [process.env.FE_DEV_URL, "https://anotherwebsite.com"];
+const whitelist = [process.env.FE_DEV_URL, process.env.FE_VER_URL];
 const corsOpts = {
   origin: function (origin, next) {
     console.log("CURRENT ORIGIN: ", origin);
