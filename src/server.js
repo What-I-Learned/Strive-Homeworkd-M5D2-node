@@ -28,7 +28,7 @@ const corsOpts = {
   },
 };
 
-app.use(cors(corsOpts)); // enable FE to communicate with BE
+app.use(cors()); // enable FE to communicate with BE
 app.use(express.static(publicFolderPath));
 app.use(bodyParser.json()); // to parse the request body else it would be undefined
 
