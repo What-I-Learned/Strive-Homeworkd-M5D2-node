@@ -5,6 +5,7 @@ import createHttpError from "http-errors";
 import { imageUpload, getPosts, writePosts } from "../../utils/postUtils.js";
 import { commentValidatioin } from "./postValidation.js";
 import { getPDFReadableStream } from "../../utils/pdf.js";
+import { pipeline } from "stream";
 
 const blogPostsRouter = express.Router();
 
@@ -83,19 +84,18 @@ blogPostsRouter.get("/:postId", async (req, res, next) => {
   }
 });
 // get pdf
-blogPostsRouter.get("/:id/pdf", async (req, res, next) => {
+blogPostsRouter.get("/:postId/pdf", async (req, res, next) => {
   try {
     const blogPosts = await getPosts();
     const post = blogPosts.find((post) => post._id === req.params.postId);
     if (post) {
-      res.setHeader("Content-Disposition", "attachment;filename=example.pdf");
-      const source = getPDFReadableStream(post);
+      const source = await getPDFReadableStream(post);
+      res.setHeader("Content-Type", "application/pdf"); // this header tells the browser to open the "save file as" dialog
       const destination = res;
 
       pipeline(source, destination, (err) => {
         if (err) next(err);
       });
-      res.send(post);
     } else {
       next(createHttpError(404, "Post with this id was not found"));
     }

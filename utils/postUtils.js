@@ -19,7 +19,6 @@ const cloudinaryStorage = new CloudinaryStorage({
   },
 });
 
-console.log("This is URL " + process.env.CLOUDINARY_URL);
 // set storage for the files
 const storage = multer.diskStorage({
   destination: publicFolderPath,
