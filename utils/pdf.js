@@ -16,6 +16,7 @@ export const getPDFReadableStream = async (content) => {
     if (response.ok) {
       console.log("worked");
       const base64Image = `data:image/${response};base64,...encodedContent...'`;
+      imagePart = { image: base64Image, width: 500, margin: [0, 0, 0, 40] };
     }
   } catch (err) {
     console.log(err);
@@ -25,11 +26,7 @@ export const getPDFReadableStream = async (content) => {
 
   const docDefinition = {
     content: [
-      {
-        // you'll most often use dataURI images on the browser side
-        // if no width/height/fit is provided, the original size will be used
-        image: base64Image,
-      },
+      imagePart,
       { text: content.title, fontSize: 20, bold: true, margin: [0, 0, 0, 40] },
     ],
   };
