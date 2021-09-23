@@ -1,5 +1,5 @@
 import PdfPrinter from "pdfmake";
-import imageToBase64 from "image-to-base64/browser";
+import imageToBase64 from "image-to-base64";
 
 export const getPDFReadableStream = async (content) => {
   const fonts = {
