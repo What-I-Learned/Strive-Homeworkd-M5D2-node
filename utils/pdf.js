@@ -2,7 +2,12 @@ import PdfPrinter from "pdfmake";
 import imageToBase64 from "image-to-base64";
 import { promisify } from "util";
 import { pipeline } from "stream";
-import { fs } from "fs-extra";
+import fs from "fs-extra";
+import { join } from "path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
 export const getPDFReadableStream = async (content) => {
   const fonts = {
@@ -49,7 +54,7 @@ export const getPDFReadableStream = async (content) => {
 pipeline is the NEWER SYNTAX which solves a lot of problems under the hood
 */
 
-export const generatePDFAsync = async (data) => {
+export const generatePDFAsync = async (content) => {
   const asyncPipeline = promisify(pipeline); // promisify is an utility which transforms a function that uses callbacks into a function that uses Promises (and so Async/Await). Pipeline is a function that works with callbacks to connect two or more streams together --> I can promisify pipeline getting back an asynchronous pipeline
 
   const fonts = {
@@ -91,5 +96,13 @@ export const generatePDFAsync = async (data) => {
 
   await asyncPipeline(pdfReadableStream, fs.createWriteStream(pdfPath)); // when the stream ends, this will resolve the promise. If the stream has any error this is going to reject the promise
 
-  return path;
+  const pdfResponse = await cloudinary.uploader.upload(pdfPath);
+
+  //.....
+  console.log(pdfResponse);
+  console.log(pdfPath);
+
+  // await fs.remove(pdfPath);
+
+  return pdfPath;
 };

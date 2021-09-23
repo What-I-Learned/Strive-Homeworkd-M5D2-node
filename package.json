@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/justaspetrauskas/Strive-Homeworkd-M5D2-node#readme",
   "dependencies": {
+    "@sendgrid/mail": "^7.4.7",
     "body-parser": "^1.19.0",
     "cloudinary": "^1.27.0",
     "cors": "^2.8.5",
@@ -36,6 +37,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "pdfmake": "^0.2.2",
     "request": "^2.88.2",
+    "sendgrid": "^5.2.3",
     "sendgrid-mail": "0.0.3",
     "uniqid": "^5.4.0"
   },
