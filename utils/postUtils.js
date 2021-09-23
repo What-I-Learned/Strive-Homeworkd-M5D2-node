@@ -42,6 +42,11 @@ const dataFolderPath = join(
   "../src/data"
 );
 const postsJSONPath = join(dataFolderPath, "posts.json");
+const authorsJSONPath = join(dataFolderPath, "authors.json");
 
 export const writePosts = (content) => writeJSON(postsJSONPath, content);
 export const getPosts = () => readJSON(postsJSONPath);
+export const getPostsReadableStream = () => fs.createReadStream(postsJSONPath);
+
+export const writeAuthors = (content) => writeJSON(authorsJSONPath, content);
+export const getAuthors = () => readJSON(authorsJSONPath);

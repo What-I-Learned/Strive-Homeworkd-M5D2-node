@@ -2,10 +2,16 @@ import express from "express";
 import uniqid from "uniqid";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
-import { imageUpload, getPosts, writePosts } from "../../utils/postUtils.js";
+import {
+  imageUpload,
+  getPosts,
+  writePosts,
+  getPostsReadableStream,
+} from "../../utils/postUtils.js";
 import { commentValidatioin } from "./postValidation.js";
 import { getPDFReadableStream } from "../../utils/pdf.js";
 import { pipeline } from "stream";
+import json2csv from "json2csv";
 
 const blogPostsRouter = express.Router();
 
@@ -72,6 +78,23 @@ blogPostsRouter.get("/", async (req, res, next) => {
 //Get one
 blogPostsRouter.get("/:postId", async (req, res, next) => {
   try {
+    if (req.params.postId == "getCSVFile") {
+      console.log("getFile");
+      res.setHeader("Content-Disposition", `attachment; filename=posts.csv`);
+      try {
+        const source = getPostsReadableStream();
+        const transform = new json2csv.Transform({
+          fields: ["author.name"],
+        });
+        const destination = res;
+
+        pipeline(source, transform, destination, (err) => {
+          if (err) next(err);
+        });
+      } catch (err) {
+        next(err);
+      }
+    }
     const blogPosts = await getPosts();
     const post = blogPosts.find((post) => post._id === req.params.postId);
     if (post) {
@@ -197,4 +220,22 @@ blogPostsRouter.delete(
     }
   }
 );
+//Download CSV file
+// blogPostsRouter.get("/getFile/CSVDownload", async (req, res, next) => {
+//   try {
+//     res.setHeader("Content-Disposition", `attachment; filename=posts.csv`);
+//     const source = getPostsReadableStream();
+//     const transform = new json2csv.Transform({
+//       fields: ["title", "category"],
+//     });
+//     const destination = res;
+
+//     pipeline(source, transform, destination, (err) => {
+//       if (err) next(err);
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// });
+
 export default blogPostsRouter;
