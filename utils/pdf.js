@@ -1,6 +1,5 @@
 import PdfPrinter from "pdfmake";
-import fs from "fs";
-import { pipeline } from "stream";
+import imageToBase64 from "image-to-base64/browser";
 
 export const getPDFReadableStream = async (content) => {
   const fonts = {
@@ -12,10 +11,25 @@ export const getPDFReadableStream = async (content) => {
     },
   };
 
+  try {
+    const response = await imageToBase64(content.coverURL);
+    if (response.ok) {
+      console.log("worked");
+      const base64Image = `data:image/${response};base64,...encodedContent...'`;
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
   const printer = new PdfPrinter(fonts);
 
   const docDefinition = {
     content: [
+      {
+        // you'll most often use dataURI images on the browser side
+        // if no width/height/fit is provided, the original size will be used
+        image: base64Image,
+      },
       { text: content.title, fontSize: 20, bold: true, margin: [0, 0, 0, 40] },
     ],
   };
