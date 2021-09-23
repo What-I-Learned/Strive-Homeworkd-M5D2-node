@@ -12,6 +12,7 @@ import { commentValidatioin } from "./postValidation.js";
 import { getPDFReadableStream } from "../../utils/pdf.js";
 import { pipeline } from "stream";
 import json2csv from "json2csv";
+import { sendEmail } from "../../utils/email.js";
 
 const blogPostsRouter = express.Router();
 
@@ -126,6 +127,48 @@ blogPostsRouter.get("/:postId/pdf", async (req, res, next) => {
     next(err);
   }
 });
+
+// save pdf on cloud storage
+blogPostsRouter.get("/:postId/pdf.cloudStorage", async (req, res, next) => {
+  try {
+    const blogPosts = await getPosts();
+    const post = blogPosts.find((post) => post._id === req.params.postId);
+    if (post) {
+      const source = await getPDFReadableStream(post);
+      res.setHeader("Content-Type", "application/pdf"); // this header tells the browser to open the "save file as" dialog
+      const destination = res;
+
+      pipeline(source, destination, (err) => {
+        if (err) next(err);
+      });
+    } else {
+      next(createHttpError(404, "Post with this id was not found"));
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+// send email and pdf to a friend
+// blogPostsRouter.post("/:postId/sendToAFriend",imageUpload.single("pdf"), async (req, res, next) => {
+//   try {
+//     const blogPosts = await getPosts();
+//     const post = blogPosts.find((post) => post._id === req.params.postId);
+//     if (post) {
+//       const source = await getPDFReadableStream(post);
+//       const destination = attachment;
+
+//       const { email } = req.body;
+//       await sendEmail(email, attachment);
+
+//       pipeline(source, destination, (err) => {
+//         if (err) next(err);
+//       });
+//     }
+//   } catch (err) {
+//     next(err);
+//   }
+// });
 
 //Edit one
 blogPostsRouter.put("/:postId", async (req, res, next) => {
