@@ -10,11 +10,16 @@ export const getPDFReadableStream = async (content) => {
       // bolditalics: "fonts/Roboto-MediumItalic.ttf",
     },
   };
-
+  let imagePart = {};
+  const blogCoverURLParts = content.coverURL.split("/");
+  const fileName = blogCoverURLParts[blogCoverURLParts.length - 1];
+  const [id, extension] = fileName.split(".");
+  console.log(fileName, extension);
   try {
     const response = await imageToBase64(content.coverURL);
+    console.log(content.coverURL);
 
-    const base64Image = `data:image/${response};base64,...encodedContent...'`;
+    const base64Image = `data:image/${extension};base64,${response}`;
     imagePart = { image: base64Image, width: 500, margin: [0, 0, 0, 40] };
   } catch (err) {
     console.log(err);
