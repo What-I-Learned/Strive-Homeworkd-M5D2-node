@@ -13,11 +13,9 @@ export const getPDFReadableStream = async (content) => {
 
   try {
     const response = await imageToBase64(content.coverURL);
-    if (response.ok) {
-      console.log("worked");
-      const base64Image = `data:image/${response};base64,...encodedContent...'`;
-      imagePart = { image: base64Image, width: 500, margin: [0, 0, 0, 40] };
-    }
+
+    const base64Image = `data:image/${response};base64,...encodedContent...'`;
+    imagePart = { image: base64Image, width: 500, margin: [0, 0, 0, 40] };
   } catch (err) {
     console.log(err);
   }
